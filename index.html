@@ -609,8 +609,8 @@ function renderModalContent(idx) {
   var cl      = catLabelMap[p.categoria] || p.categoria;
   var ico     = catEmojiMap[p.categoria] || '📦';
   var info    = productInfo[p.categoria] || {};
-  var waMsg   = 'Hola, quiero comprar el ' + p.producto + ' (' + p.caracteristica + ') a ' + fmtMXN(venta) + '. Hay stock disponible?';
-  var waUrl   = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
+  var waMsg   = 'Hola Marco, quiero comprar el ' + p.producto + ' (' + p.caracteristica + ') a ' + fmtMXN(venta) + '. Hay stock disponible?';
+  var waUrl = 'https://wa.me/5219531569933?text=' + encodeURIComponent(waMsg);
 
   document.getElementById('modalPrev').disabled = (idx === 0);
   document.getElementById('modalNext').disabled = (idx === filteredList.length - 1);
