@@ -354,29 +354,46 @@ footer{border-top:1px solid var(--border);text-align:center;padding:2rem 1.5rem;
 
 <script>
 // ─── DATOS ───────────────────────────────────────────────────────────────────
-const productos = [
-  { producto:'iPHONE 17',         categoria:'IPHONE',  caracteristica:'256 GB',                precioUSD:800,  precioMexico:20000, stock:8  },
-  { producto:'iPHONE 17',         categoria:'IPHONE',  caracteristica:'512 GB',                precioUSD:1000, precioMexico:25000, stock:6  },
-  { producto:'iPHONE 17 PRO',     categoria:'IPHONE',  caracteristica:'256 GB',                precioUSD:1100, precioMexico:28500, stock:4  },
-  { producto:'iPHONE 17 PRO',     categoria:'IPHONE',  caracteristica:'512 GB',                precioUSD:1300, precioMexico:33500, stock:3  },
-  { producto:'iPHONE 17 PRO MAX', categoria:'IPHONE',  caracteristica:'256 GB',                precioUSD:1200, precioMexico:31000, stock:3  },
-  { producto:'iPHONE 17 PRO MAX', categoria:'IPHONE',  caracteristica:'512 GB',                precioUSD:1400, precioMexico:36000, stock:2  },
-  { producto:'iPHONE AIR',        categoria:'IPHONE',  caracteristica:'256 GB',                precioUSD:1000, precioMexico:26000, stock:5  },
-  { producto:'iPHONE AIR',        categoria:'IPHONE',  caracteristica:'512 GB',                precioUSD:1200, precioMexico:31000, stock:4  },
-  { producto:'AIRPODS MAX',       categoria:'AIRPODS', caracteristica:'2.0',                   precioUSD:550,  precioMexico:13000, stock:12 },
-  { producto:'AIRPODS',           categoria:'AIRPODS', caracteristica:'PRO 3',                 precioUSD:250,  precioMexico:5800,  stock:15 },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'SERIE 11 - 42MM',       precioUSD:400,  precioMexico:9500,  stock:7  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'SERIE 11 - 46MM',       precioUSD:430,  precioMexico:10250, stock:6  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'ULTRA 3',               precioUSD:800,  precioMexico:20000, stock:4  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'ULTRA 3 (Titanio)',     precioUSD:900,  precioMexico:22500, stock:3  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'HERMES 42MM C-NORMAL',  precioUSD:1250, precioMexico:29000, stock:2  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'HERMES 42MM C-PARTY',   precioUSD:1350, precioMexico:32000, stock:1  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'HERMES 46MM C-NORMAL',  precioUSD:1300, precioMexico:30300, stock:2  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'HERMES 46MM C-PARTY',   precioUSD:1400, precioMexico:33300, stock:1  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'HERMES ULTRA 3 EN MER', precioUSD:1400, precioMexico:33300, stock:1  },
-  { producto:'WATCH',             categoria:'WATCH',   caracteristica:'HERMES ULTRA 3 DIVING', precioUSD:1500, precioMexico:36300, stock:0  },
-  { producto:'MACBOOK NEO',       categoria:'MACBOOK', caracteristica:'512 GB',                precioUSD:700,  precioMexico:15000, stock:5  },
-];
+var productos = [];
+var SHEETS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvbcOUIFoh2xFjrpmvu9OtNyk6tBhThITNM3pz7ye9bPymixj_VFtl7m8tC8RyN8jXu9BZNhTV3ZP2/pub?gid=0&single=true&output=csv';
+var SHEETS_URL = 'https://corsproxy.io/?' + encodeURIComponent(SHEETS_CSV);
+
+function parseCSV(text) {
+  var lines = text.trim().split('\n');
+  var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/\r/g,''); });
+  var result = [];
+  for (var i=1; i<lines.length; i++) {
+    var cols = lines[i].split(',').map(function(c){ return c.trim().replace(/\r/g,''); });
+    if (cols.length < headers.length) continue;
+    var obj = {};
+    for (var j=0; j<headers.length; j++) {
+      obj[headers[j]] = cols[j];
+    }
+    result.push({
+      producto:     obj.producto     || '',
+      categoria:    obj.categoria    || '',
+      caracteristica: obj.caracteristica || '',
+      precioUSD:    parseFloat(obj.precioUSD)    || 0,
+      precioMexico: parseFloat(obj.precioMexico) || 0,
+      stock:        parseInt(obj.stock)          || 0
+    });
+  }
+  return result;
+}
+
+async function loadProductos() {
+  var grid = document.getElementById('grid');
+  grid.innerHTML = '<div class="empty"><p>Cargando productos...</p></div>';
+  try {
+    var res = await fetch(SHEETS_URL);
+    var text = await res.text();
+    productos = parseCSV(text);
+    initViewers();
+    renderGrid();
+  } catch(e) {
+    grid.innerHTML = '<div class="empty"><h3>Error cargando productos</h3><p>Revisa tu conexión e intenta de nuevo.</p></div>';
+  }
+}
 
 const LORD=0.10, IMPUESTO=0.10, ENVIO=175, UTILIDAD=0.10;
 let dolar=17.5, categoriaActiva='TODOS', filteredList=[], modalIndex=-1;
@@ -699,10 +716,10 @@ document.addEventListener('keydown', function(e){
 });
 
 document.addEventListener('DOMContentLoaded', function(){
-  initViewers();
-  renderGrid();
+  loadProductos();
   fetchRate();
   setInterval(updateViewers, 20000);
+  setInterval(fetchRate, 300000);
 });
 </script>
 </body>
